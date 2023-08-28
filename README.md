@@ -30,42 +30,42 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 
 ### OBS section:
 *host* - The IP of the host your OBS installation is running on. Typically this is localhost or 172.0.0.1 if it's not a different computer than the one you're on.  
-*port* - Same as above, but the port
-*password* - Password set for the OBS websocket server. Leave blank if authorization is not active in OBS
-*animation_scene* - Name of the Scene animations are to be spawned in.
-*canvas_width* - Width of the OBS canvas. Most times this will be 1920
-*canvas_height* - Height of the OBS canvas. Most times this will be 1080
+*port* - Same as above, but the port  
+*password* - Password set for the OBS websocket server. Leave blank if authorization is not active in OBS  
+*animation_scene* - Name of the Scene animations are to be spawned in.  
+*canvas_width* - Width of the OBS canvas. Most times this will be 1920  
+*canvas_height* - Height of the OBS canvas. Most times this will be 1080  
 
 ### Picarto section:
-*channel_auth* - The Authorization for your Picarto Chat Bot
+*channel_auth* - The Authorization for your Picarto Chat Bot  
 *channel_owner* - The Name of your channel / your username
 
 ### Points section:
-*base* - Base number of points earned by a user in your Picarto chat
-*boosted* - Number of points earned by a user in your Picarto chat if the user is present in the file *boosted_users.json*
+*base* - Base number of points earned by a user in your Picarto chat  
+*boosted* - Number of points earned by a user in your Picarto chat if the user is present in the file *boosted_users.json*  
 *frequency* - The Frequency in seconds those points are given out at
 
 ## Animations
-Animation information is stored in the animations.json file. The fields have the following function:
+Animation information is stored in the animations.json file. The fields have the following function:  
 
-*name* (in the example file, this is 'bounce') - name of an animation
-*file* - path to the local file to be used by OBS as a media source. This can be a mp4, png, jpg, gif, animated png or gif, sound file and others.
-*coordinates* - two entry array of x and y coordinates the animation should be spawned at on the OBS canvas
-*scale* - two entry array of x and y scale values for the spawned object
-*trigger* - word a user will have to type into the chat to redeem the animation
-*price* - point cost for the animation
-*random_position* - if the position of the spawned animation should be randomized
-*random_rotation* - if the rotation of the spawned animation should be randomized
-*fade* - should the spawned animation fade away after 3 seconds?
-*static* - should the animation stop being displayed after one play or loop? (useful for static images in combination with fade)
+*name* (in the example file, this is 'bounce') - name of an animation  
+*file* - path to the local file to be used by OBS as a media source. This can be a mp4, png, jpg, gif, animated png or gif, sound file and others.  
+*coordinates* - two entry array of x and y coordinates the animation should be spawned at on the OBS canvas  
+*scale* - two entry array of x and y scale values for the spawned object  
+*trigger* - word a user will have to type into the chat to redeem the animation  
+*price* - point cost for the animation  
+*random_position* - if the position of the spawned animation should be randomized  
+*random_rotation* - if the rotation of the spawned animation should be randomized  
+*fade* - should the spawned animation fade away after 3 seconds?  
+*static* - should the animation stop being displayed after one play or loop? (useful for static images in combination with fade)  
 
 ## Other files 
-*boosted_users.json* - contains an array of usernames that will get awarded with the boosted amount defined in config.ini
-*redemptions.log* - contains a log of redemptions with time stamps
-*user_points.json* - contains users and their current point standings
+*boosted_users.json* - contains an array of usernames that will get awarded with the boosted amount defined in config.ini  
+*redemptions.log* - contains a log of redemptions with time stamps  
+*user_points.json* - contains users and their current point standings  
 
 # Limitations
-- The chat bot can only see channel join and leave events, so it should ideally be started before the stream is started. That said, there is a small check when a user writes something in the chat, to make sure they're still being tracked as 'active'
+- The chat bot can only see channel join and leave events, so it should ideally be started before the stream is started. That said, there is a small check when a user writes something in the chat, to make sure they're still being tracked as 'active'  
 - The user standings are saved with each update, such as gaining points and spending, but not continuously.
 
 # Requests
