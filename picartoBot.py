@@ -65,6 +65,8 @@ async def connect_to_chat(loop):
     async with websockets.connect(uri, extra_headers=headers) as websocket_listener:
         print(f"connecting to {uri}")
         asyncio.ensure_future(update_standings())
+        if config.get("obs", "fade_text_field"):
+            asyncio.ensure_future(display_text_field_loop())
         while True:
             try:
                 message = await websocket_listener.recv()
@@ -327,9 +329,10 @@ async def update_obs_scroll_text():
     password = config.get("obs", "password")
     result = []
     for user in user_list:
-        result.append(
-            f"{user} has {user_list[user]} point{'s' if user_list[user] != 1 else ''}"
-        )
+        if user in active_users:
+            result.append(
+                f"{user} has {user_list[user]} point{'s' if user_list[user] != 1 else ''}"
+            )
     new_text = ", ".join(result)
     await update_text_field(new_text, host, port, password)
 
@@ -356,6 +359,60 @@ async def update_text_field(new_text, host, port, password):
         print("Request succeeded! Response data: {}".format(ret.responseData))
     else:
         print(ret)
+
+async def display_text_field_loop():
+    host = config.get("obs", "host")
+    port = config.get("obs", "port")
+    password = config.get("obs", "password")
+    display_time = int(config.get("obs", "points_display_time"))
+    scene = config.get("obs", "animation_scene")
+    wait_time = int(config.get("obs", "points_display_interval"))
+    parameters = simpleobsws.IdentificationParameters(
+        ignoreNonFatalRequestChecks=False
+    )
+    ws = simpleobsws.WebSocketClient(
+        url=f"ws://{host}:{port}",
+        password={password},
+        identification_parameters=parameters,
+    )
+    await ws.connect()  
+    await ws.wait_until_identified()
+
+    request = simpleobsws.Request("GetSceneItemList", {"sceneName": scene})
+    scene_items = await ws.call(request)
+    if scene_items.ok():  # Check if the request succeeded
+        scene_items = json.loads(json.dumps(scene_items.responseData))["sceneItems"]
+    else:
+        print(scene_items)
+
+    for item in scene_items:
+        if item["sourceName"] == "Ticker":
+            scene_item_id = item["sceneItemId"]
+
+    while True:
+        print("Waiting for ticker to be displayed ")
+        await asyncio.sleep(wait_time)
+        print("Displaying ticker now!")
+        request = simpleobsws.Request(
+            "SetSceneItemEnabled", 
+            {
+                "sceneName": scene, 
+                "sceneItemId": scene_item_id, 
+                "sceneItemEnabled": True
+            }
+        )
+        await ws.call(request)
+        await asyncio.sleep(display_time)
+        print("Hiding Ticker now!")
+        request = simpleobsws.Request(
+            "SetSceneItemEnabled", 
+            {
+                "sceneName": scene, 
+                "sceneItemId": scene_item_id, 
+                "sceneItemEnabled": False
+            }
+        )
+        await ws.call(request)
 
 
 async def clean_up(id):
