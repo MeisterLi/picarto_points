@@ -7,8 +7,13 @@
         "price" : 10,
         "random_position" : false,
         "random_rotation" : false,
+        "random_scale" : [1, 1],
         "fade" : false,
-        "static" : false
+        "static" : false,
+        "fade_time" : 3,
+        "volume" : -100,
+        "rare_file" : "",
+        "rare_chance" : 0
     },
     "twilight": {
         "file" : "G:\\downloads\\Twilight.png",
@@ -18,8 +23,13 @@
         "price" : 20,
         "random_position" : false,
         "random_rotation" : false,
+        "random_scale" : [1, 1],
         "fade" : true,
-        "static" : true
+        "static" : true,
+        "fade_time" : 3,
+        "volume" : -100,
+        "rare_file" : "",
+        "rare_chance" : 0
     },
     "paw": {
         "file" : "G:\\downloads\\pc5e5ogcB.png",
@@ -29,7 +39,12 @@
         "price" : 20,
         "random_position" : true,
         "random_rotation" : true,
+        "random_scale" : [0.1, 0.6],
         "fade" : true,
-        "static" : true
+        "static" : true,
+        "fade_time" : 3,
+        "volume" : -100,
+        "rare_file" : "G:\\Pictures\\bluetooth.png",
+        "rare_chance" : 20
     }
 }

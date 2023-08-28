@@ -119,9 +119,14 @@ async def determine_animation_and_price(message, user):
                 animations[animation]["scale"],
                 animations[animation]["random_position"],
                 animations[animation]["random_rotation"],
+                animations[animation]["random_scale"],
                 str(animation),
                 animations[animation]["fade"],
                 animations[animation]["static"],
+                animations[animation]["fade_time"],
+                animations[animation]["volume"],
+                animations[animation]["rare_file"],
+                animations[animation]["rare_chance"]
             )
 
 
@@ -133,9 +138,14 @@ async def spend_points(
     scale,
     random_position,
     random_rotation,
+    random_scale,
     animation_name,
     fade,
     static,
+    fade_time,
+    volume,
+    rare_file,
+    rare_chance,
 ):
     if user_list[user] >= price:
         user_list[user] -= price
@@ -146,9 +156,14 @@ async def spend_points(
             user,
             random_position,
             random_rotation,
+            random_scale,
             animation_name,
             fade,
             static,
+            fade_time,
+            volume,
+            rare_file,
+            rare_chance,
         )
         log_redemption(user, animation_name, price)
     elif user_list[user] <= price:
@@ -184,9 +199,14 @@ async def trigger_obs_animation(
     user,
     random_position,
     random_rotation,
+    random_scale,
     animation_name,
     fade,
     static,
+    fade_time,
+    volume,
+    rare_file,
+    rare_chance,
 ):
     host = config.get("obs", "host")
     port = config.get("obs", "port")
@@ -205,17 +225,31 @@ async def trigger_obs_animation(
     await ws.connect()  # Make the connection to obs-websocket
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
 
+    final_file = file
+    if rare_file != "":
+        if random.random() < rare_chance / 100.0:
+            final_file = rare_file
+
     request = simpleobsws.Request(
         "CreateInput",
         {
             "sceneName": scene_name,
             "inputName": scene_item_name,
             "inputKind": "ffmpeg_source",
-            "inputSettings": {"hw_decode": True, "local_file": file, "looping": static},
+            "inputSettings": {"hw_decode": True, "local_file": final_file, "looping": static},
         },
     )
     await ws.call(request)
     print(f"Creating animation {animation_name} for {user}")
+
+    request = simpleobsws.Request(
+        "SetInputVolume", 
+        {
+            "inputName": scene_item_name, 
+            "inputVolumeDb" : volume
+        }
+    )
+    await ws.call(request)
 
     request = simpleobsws.Request("GetSceneItemList", {"sceneName": scene_name})
     scene_items = await ws.call(request)
@@ -232,7 +266,7 @@ async def trigger_obs_animation(
 
     # queue a cleanup event for the added OBS item or fade it out if needed
     if fade:
-        asyncio.ensure_future(fade_out(scene_item_name))
+        asyncio.ensure_future(fade_out(scene_item_name, fade_time))
     else:
         asyncio.ensure_future(clean_up(scene_item_name))
 
@@ -248,6 +282,11 @@ async def trigger_obs_animation(
         print("Random Rotation active!")
         final_rotation = float(random.randint(0, 360))
     print("Final rotation: " + str(final_rotation))
+
+    final_scale = scale
+    if random_scale != [1, 1]:
+        temp_scale = round(random.uniform(random_scale[0], random_scale[1]), 2)
+        final_scale = [temp_scale, temp_scale]
 
     request = simpleobsws.Request(
         "SetSceneItemTransform",
@@ -268,8 +307,8 @@ async def trigger_obs_animation(
                 "positionX": final_coordinates[0],
                 "positionY": final_coordinates[1],
                 "rotation": final_rotation,
-                "scaleX": scale[0],
-                "scaleY": scale[1],
+                "scaleX": final_scale[0],
+                "scaleY": final_scale[1],
                 "sourceHeight": 100.0,
                 "sourceWidth": 100.0,
                 "width": 100.0,
@@ -339,7 +378,7 @@ async def clean_up(id):
     await ws.call(request)
 
 
-async def fade_out(scene_item):
+async def fade_out(scene_item, time):
     host = config.get("obs", "host")
     port = config.get("obs", "port")
     password = config.get("obs", "password")
@@ -363,7 +402,7 @@ async def fade_out(scene_item):
         },
     )
     await ws.call(request)
-    await asyncio.sleep(3)
+    await asyncio.sleep(time)
     num_steps = int(1.0 / 0.02)
     step_size = (1.0 - 0.0) / num_steps
     current_value = 1.0
