@@ -29,7 +29,7 @@ https://oauth.picarto.tv/chat/bot
 The configuraiton is stored in the config.ini. Below is a breakdown of all settings:
 
 ### OBS section:
-*host* - The IP of the host your OBS installation is running on. Typically this is localhost or 172.0.0.1 if it's not a different computer than the one you're on.
+*host* - The IP of the host your OBS installation is running on. Typically this is localhost or 172.0.0.1 if it's not a different computer than the one you're on.**Enter**
 *port* - Same as above, but the port
 *password* - Password set for the OBS websocket server. Leave blank if authorization is not active in OBS
 *animation_scene* - Name of the Scene animations are to be spawned in.
