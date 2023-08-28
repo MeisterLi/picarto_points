@@ -1,0 +1,35 @@
+{
+    "bounce": {
+        "file" : "G:\\downloads\\Animated_PNG_example_bouncing_beach_ball.png",
+        "coordinates" : [20, 20],
+        "scale" : [1.0, 1.0],
+        "trigger" : "!bounce",
+        "price" : 10,
+        "random_position" : false,
+        "random_rotation" : false,
+        "fade" : false,
+        "static" : false
+    },
+    "twilight": {
+        "file" : "G:\\downloads\\Twilight.png",
+        "coordinates" : [40, 40],
+        "scale" : [1.0, 1.0],
+        "trigger" : "!twilight",
+        "price" : 20,
+        "random_position" : false,
+        "random_rotation" : false,
+        "fade" : true,
+        "static" : true
+    },
+    "paw": {
+        "file" : "G:\\downloads\\pc5e5ogcB.png",
+        "coordinates" : [40, 40],
+        "scale" : [0.1, 0.1],
+        "trigger" : "!paw",
+        "price" : 20,
+        "random_position" : true,
+        "random_rotation" : true,
+        "fade" : true,
+        "static" : true
+    }
+}
