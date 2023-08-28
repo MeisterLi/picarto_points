@@ -64,6 +64,14 @@ Animation information is stored in the animations.json file. The fields have the
 *redemptions.log* - contains a log of redemptions with time stamps  
 *user_points.json* - contains users and their current point standings  
 
+# Running
+Make sure OBS is running and all needed data is set in the config.ini. Then go to the folder these files are located with your console or terminal and type:
+
+```
+python picartoBot.py
+```
+to start.
+
 # Limitations
 - The chat bot can only see channel join and leave events, so it should ideally be started before the stream is started. That said, there is a small check when a user writes something in the chat, to make sure they're still being tracked as 'active'  
 - The user standings are saved with each update, such as gaining points and spending, but not continuously.
