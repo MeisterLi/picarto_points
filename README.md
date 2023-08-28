@@ -35,6 +35,9 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 *animation_scene* - Name of the Scene animations are to be spawned in.  
 *canvas_width* - Width of the OBS canvas. Most times this will be 1920  
 *canvas_height* - Height of the OBS canvas. Most times this will be 1080  
+*points_display_time* - if fade_text_field is "True", this will determined how long we will display the ticker  
+*points_display_interval* - if fade_text_field is "True", this will determined how long we will hide the ticker  
+*fade_text_field* - Should we hide/show the Ticker in a loop?
 
 ### Picarto section:
 *channel_auth* - The Authorization for your Picarto Chat Bot  
@@ -56,8 +59,13 @@ Animation information is stored in the animations.json file. The fields have the
 *price* - point cost for the animation  
 *random_position* - if the position of the spawned animation should be randomized  
 *random_rotation* - if the rotation of the spawned animation should be randomized  
+*random_scale* - an array of two scales to randomize between - set to [1.0, 1.0] for no variation  
 *fade* - should the spawned animation fade away after 3 seconds?  
 *static* - should the animation stop being displayed after one play or loop? (useful for static images in combination with fade)  
+*fade_time* - Time before we fade the item  
+*volume* - Volume in dB to spawn the media item at (such as video or music)  
+*rare_file* - Alternative "rare" file to chose if rare_chance is hit
+*rare_chance* - Chance for the "rare" file to be chosen
 
 ## Other files 
 *boosted_users.json* - contains an array of usernames that will get awarded with the boosted amount defined in config.ini  
