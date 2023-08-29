@@ -41,7 +41,12 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 
 ### Picarto section:
 *channel_auth* - The Authorization for your Picarto Chat Bot  
-*channel_owner* - The Name of your channel / your username
+*channel_owner* - The Name of your channel / your username  
+*granter* - a user that is able to use !grant in the chat to grant points manually, such as:
+```
+!grant 300 Maniko
+```
+This uses the channel name, not the account name!
 
 ### Points section:
 *base* - Base number of points earned by a user in your Picarto chat  
