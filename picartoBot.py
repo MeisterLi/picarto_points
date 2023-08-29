@@ -107,7 +107,18 @@ async def check_for_message(message):
         message_author = message_content["m"][0]["n"]
         print(f"Message {chat_message} from {message_author}")
         check_online_state(message_author)
+        await check_for_channel_owner(chat_message, message_author)
         await determine_animation_and_price(chat_message, message_author)
+
+async def check_for_channel_owner(chat_message, message_author):
+    if message_author == config.get("picarto", "granter") and '!grant' in chat_message:
+        print("Got granting message!")
+        split_text = chat_message.split()
+        user = split_text[2]
+        amount = int(split_text[1])
+        if user in user_list:
+            user_list[user] += amount
+            print(f"Updated {user} to {user_list[user]}")
 
 
 async def determine_animation_and_price(message, user):
