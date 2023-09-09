@@ -85,6 +85,11 @@ python picartoBot.py
 ```
 to start.
 
+# Chat commands
+There are some universal chat commands that can be performed:  
+*!points* - will send a whisper to the user with their current point standing  
+*!grant 'X' 'user'* - if the sender of this message is the granter as defined in the config, this will grant the X amount of points to the mentioned user. An example would be *!grant 30 Maniko*  
+
 # Limitations
 - The chat bot can only see channel join and leave events, so it should ideally be started before the stream is started. That said, there is a small check when a user writes something in the chat, to make sure they're still being tracked as 'active'  
 - The user standings are saved with each update, such as gaining points and spending, but not continuously.
