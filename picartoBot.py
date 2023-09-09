@@ -20,6 +20,7 @@ user_list = {}
 boosted_users = {}
 active_users = []
 clean_up_list = []
+global picarto_ws
 
 chat_uri = "wss://chat.picarto.tv/bot/"
 headers = {"User-Agent": f"PTV-BOT-{channel_owner}"}
@@ -30,8 +31,8 @@ def get_saved_standings():
     standings = {}
     try:
         standings = json.load(file)
-    except Exception:
-        print("File Empty!")
+    except Exception as e:
+        print(f"Unable to load saved standings! Please check syntax \n error {e}")
     file.close()
     return standings
 
@@ -41,16 +42,19 @@ def get_boosted_users():
     boosted = []
     try:
         boosted = json.load(file)
-    except Exception:
-        print("File Empty!")
+    except Exception as e:
+        print(f"Unable to load boosted users! Please check syntax \n error {e}")
     file.close()
     return boosted
 
 
 def get_animation_definitions():
-    with open("animations.json") as json_file:
-        data = json.load(json_file)
-        return data
+    try:
+        with open("animations.json") as json_file:
+            data = json.load(json_file)
+            return data
+    except Exception as e:
+        print(f"Unable to read animation data! \n Error is {e}")
 
 
 def save_standings():
@@ -60,9 +64,11 @@ def save_standings():
 
 
 async def connect_to_chat(loop):
+    global picarto_ws
     uri = chat_uri + f"username={channel_owner}&password={channel_auth}"
 
     async with websockets.connect(uri, extra_headers=headers) as websocket_listener:
+        picarto_ws = websocket_listener
         print(f"connecting to {uri}")
         asyncio.ensure_future(update_standings())
         if config.get("obs", "fade_text_field"):
@@ -83,10 +89,11 @@ async def send_message(websocket, message):
     await websocket.send(json.dumps(message_data))
 
 
-async def send_whisper(websocket, message, user):
+async def send_whisper(message, user):
+    global picarto_ws
     message_data = {"type": "whisper", "displayName": user, "message": message}
     print("Sending message")
-    await websocket.send(json.dumps(message_data))
+    await picarto_ws.send(json.dumps(message_data))
 
 
 async def check_for_message(message):
@@ -108,6 +115,7 @@ async def check_for_message(message):
         print(f"Message {chat_message} from {message_author}")
         check_online_state(message_author)
         await check_for_channel_owner(chat_message, message_author)
+        await check_for_points(chat_message, message_author)
         await determine_animation_and_price(chat_message, message_author)
 
 async def check_for_channel_owner(chat_message, message_author):
@@ -119,6 +127,10 @@ async def check_for_channel_owner(chat_message, message_author):
         if user in user_list:
             user_list[user] += amount
             print(f"Updated {user} to {user_list[user]}")
+            
+async def check_for_points(chat_message, message_author):
+    if "!points" in chat_message:
+        await send_whisper(f"You currently have {user_list[message_author]} points!", message_author)
 
 
 async def determine_animation_and_price(message, user):
@@ -227,13 +239,9 @@ async def trigger_obs_animation(
     scene_name = config.get("obs", "animation_scene")
     # Let's set the name this spawned animation will have in OBS. Random String to make it unique
     scene_item_name = f"{user}_redeem_{animation_name}_" + get_random_string(8)
-    parameters = simpleobsws.IdentificationParameters(
-        ignoreNonFatalRequestChecks=False
-    )  # Create an IdentificationParameters object (optional for connecting)
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
-        identification_parameters=parameters,
     )
     await ws.connect()  # Make the connection to obs-websocket
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
@@ -331,6 +339,7 @@ async def trigger_obs_animation(
     ref = await ws.call(request)
     print(ref)
     print(f"setting transforms for {scene_item_name}")
+    await ws.disconnect()
     await update_obs_scroll_text()
 
 
@@ -349,13 +358,9 @@ async def update_obs_scroll_text():
 
 
 async def update_text_field(new_text, host, port, password):
-    parameters = simpleobsws.IdentificationParameters(
-        ignoreNonFatalRequestChecks=False
-    )  # Create an IdentificationParameters object (optional for connecting)
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
-        identification_parameters=parameters,
     )
     await ws.connect()  # Make the connection to obs-websocket
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
@@ -370,6 +375,8 @@ async def update_text_field(new_text, host, port, password):
         print("Request succeeded! Response data: {}".format(ret.responseData))
     else:
         print(ret)
+    await ws.disconnect()
+
 
 async def display_text_field_loop():
     host = config.get("obs", "host")
@@ -378,13 +385,9 @@ async def display_text_field_loop():
     display_time = int(config.get("obs", "points_display_time"))
     scene = config.get("obs", "animation_scene")
     wait_time = int(config.get("obs", "points_display_interval"))
-    parameters = simpleobsws.IdentificationParameters(
-        ignoreNonFatalRequestChecks=False
-    )
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
-        identification_parameters=parameters,
     )
     await ws.connect()  
     await ws.wait_until_identified()
@@ -399,10 +402,14 @@ async def display_text_field_loop():
     for item in scene_items:
         if item["sourceName"] == "Ticker":
             scene_item_id = item["sceneItemId"]
+    await ws.disconnect()
+
 
     while True:
         print("Waiting for ticker to be displayed ")
         await asyncio.sleep(wait_time)
+        await ws.connect()  
+        await ws.wait_until_identified()
         print("Displaying ticker now!")
         request = simpleobsws.Request(
             "SetSceneItemEnabled", 
@@ -424,19 +431,16 @@ async def display_text_field_loop():
             }
         )
         await ws.call(request)
+        await ws.disconnect()
 
 
 async def clean_up(id):
     host = config.get("obs", "host")
     port = config.get("obs", "port")
     password = config.get("obs", "password")
-    parameters = simpleobsws.IdentificationParameters(
-        ignoreNonFatalRequestChecks=False
-    )  # Create an IdentificationParameters object (optional for connecting)
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
-        identification_parameters=parameters,
     )
     await asyncio.sleep(90)
     print(f"Removing redeem item {id}")
@@ -444,19 +448,16 @@ async def clean_up(id):
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
     request = simpleobsws.Request("RemoveInput", {"inputName": id})
     await ws.call(request)
+    await ws.disconnect()
 
 
 async def fade_out(scene_item, time):
     host = config.get("obs", "host")
     port = config.get("obs", "port")
     password = config.get("obs", "password")
-    parameters = simpleobsws.IdentificationParameters(
-        ignoreNonFatalRequestChecks=False
-    )  # Create an IdentificationParameters object (optional for connecting)
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
-        identification_parameters=parameters,
     )
     await ws.connect()  # Make the connection to obs-websocket
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
