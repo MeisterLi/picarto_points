@@ -103,12 +103,15 @@ async def check_for_message(message):
         print(f"User {user_name} joined!")
         if user_name not in user_list:
             user_list[user_name] = 0
-        active_users.append(user_name)
+        if user_name not in active_users:
+            active_users.append(user_name)
+        await check_for_friend(user_name, False)
     if message_content["t"] == "ur":
         user_name = message_content["m"]["n"]
         print(f"User {user_name} left!")
         if user_name in active_users:
             active_users.remove(user_name)
+            await check_for_friend(user_name, True)
     if message_content["t"] == "c":
         chat_message = message_content["m"][0]["m"]
         message_author = message_content["m"][0]["n"]
@@ -117,6 +120,50 @@ async def check_for_message(message):
         await check_for_channel_owner(chat_message, message_author)
         await check_for_points(chat_message, message_author)
         await determine_animation_and_price(chat_message, message_author)
+        
+async def check_for_friend(user_name, remove):
+    friends = json.loads(config.get("picarto", "friends"))
+    
+    if user_name in friends:
+        await show_friend(user_name, remove)
+        
+async def show_friend(user_name, remove):
+    friend_scene = config.get("obs", "friend_scene")
+    host = config.get("obs", "host")
+    port = config.get("obs", "port")
+    password = config.get("obs", "password")
+    ws = simpleobsws.WebSocketClient(
+        url=f"ws://{host}:{port}",
+        password={password},
+    )
+    await ws.connect()  # Make the connection to obs-websocket
+    await ws.wait_until_identified()  # Wait for the identification handshake to complete
+    request = simpleobsws.Request("GetSceneItemList", {"sceneName": friend_scene})
+    scene_items = await ws.call(request)
+    if scene_items.ok():  # Check if the request succeeded
+        scene_items = json.loads(json.dumps(scene_items.responseData))["sceneItems"]
+    else:
+        print(scene_items)
+
+    for item in scene_items:
+        if item["sourceName"] == user_name:
+            scene_item_id = item["sceneItemId"]
+    
+    request = simpleobsws.Request(
+            "SetSceneItemEnabled", 
+            {
+                "sceneName": friend_scene, 
+                "sceneItemId": scene_item_id, 
+                "sceneItemEnabled": not remove
+            }
+        )
+    if not remove:
+        print(f"Enabling {user_name} in scene!")
+    else:
+        print(f"Disabling {user_name} in scene!")
+    await ws.call(request)
+        
+        
 
 async def check_for_channel_owner(chat_message, message_author):
     if message_author == config.get("picarto", "granter") and '!grant' in chat_message:
@@ -127,6 +174,7 @@ async def check_for_channel_owner(chat_message, message_author):
         if user in user_list:
             user_list[user] += amount
             print(f"Updated {user} to {user_list[user]}")
+        await update_obs_scroll_text()
             
 async def check_for_points(chat_message, message_author):
     if "!points" in chat_message:
@@ -174,7 +222,7 @@ async def spend_points(
 ):
     if user_list[user] >= price:
         user_list[user] -= price
-        await trigger_obs_animation(
+        await trigger_obs_animations(
             file,
             coordinates,
             scale,
@@ -216,6 +264,55 @@ async def update_standings():
         save_standings()
         await update_obs_scroll_text()
 
+async def trigger_obs_animations(
+    file,
+    coordinates,
+    scale,
+    user,
+    random_position,
+    random_rotation,
+    random_scale,
+    animation_name,
+    fade,
+    static,
+    fade_time,
+    volume,
+    rare_file,
+    rare_chance,
+):
+    if isinstance(file, list):
+        for entry in file:
+            await trigger_obs_animation(
+                entry,
+                coordinates,
+                scale,
+                user,
+                random_position,
+                random_rotation,
+                random_scale,
+                animation_name,
+                fade,
+                static,
+                fade_time,
+                volume,
+                rare_file,
+                rare_chance,)
+    else:
+        await trigger_obs_animation(
+                file,
+                coordinates,
+                scale,
+                user,
+                random_position,
+                random_rotation,
+                random_scale,
+                animation_name,
+                fade,
+                static,
+                fade_time,
+                volume,
+                rare_file,
+                rare_chance,)
 
 async def trigger_obs_animation(
     file,
@@ -245,19 +342,27 @@ async def trigger_obs_animation(
     )
     await ws.connect()  # Make the connection to obs-websocket
     await ws.wait_until_identified()  # Wait for the identification handshake to complete
-
+      
     final_file = file
     if rare_file != "":
         if random.random() < rare_chance / 100.0:
             final_file = rare_file
-
+    final_looping = static
+    final_fade = fade
+            
+    audio_extensions = ['.mp3', '.ogg', '.wav', '.m4a']
+    for extension in audio_extensions:
+        if file.endswith(extension):
+            final_looping = False
+            final_fade = False                
+    
     request = simpleobsws.Request(
         "CreateInput",
         {
             "sceneName": scene_name,
             "inputName": scene_item_name,
             "inputKind": "ffmpeg_source",
-            "inputSettings": {"hw_decode": True, "local_file": final_file, "looping": static},
+            "inputSettings": {"hw_decode": True, "local_file": final_file, "looping": final_looping},
         },
     )
     await ws.call(request)
@@ -286,7 +391,7 @@ async def trigger_obs_animation(
     print(f"Requesting scene tree for {scene_name}")
 
     # queue a cleanup event for the added OBS item or fade it out if needed
-    if fade:
+    if final_fade:
         asyncio.ensure_future(fade_out(scene_item_name, fade_time))
     else:
         asyncio.ensure_future(clean_up(scene_item_name))
@@ -372,7 +477,7 @@ async def update_text_field(new_text, host, port, password):
     print(request)
     ret = await ws.call(request)  # Perform the request
     if ret.ok():  # Check if the request succeeded
-        print("Request succeeded! Response data: {}".format(ret.responseData))
+        print("Update of OBS Ticker text successful!")
     else:
         print(ret)
     await ws.disconnect()
@@ -383,13 +488,16 @@ async def display_text_field_loop():
     port = config.get("obs", "port")
     password = config.get("obs", "password")
     display_time = int(config.get("obs", "points_display_time"))
-    scene = config.get("obs", "animation_scene")
+    scene = config.get("obs", "ticker_scene")
     wait_time = int(config.get("obs", "points_display_interval"))
     ws = simpleobsws.WebSocketClient(
         url=f"ws://{host}:{port}",
         password={password},
     )
-    await ws.connect()  
+    try:
+        await ws.connect()
+    except ConnectionRefusedError as e:
+        print("Unable to connect to OBS! Check if OBS is running?")
     await ws.wait_until_identified()
 
     request = simpleobsws.Request("GetSceneItemList", {"sceneName": scene})

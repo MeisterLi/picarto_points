@@ -1,6 +1,6 @@
 {
     "bounce": {
-        "file" : "G:\\downloads\\Animated_PNG_example_bouncing_beach_ball.png",
+        "file" : ["G:\\downloads\\Animated_PNG_example_bouncing_beach_ball.png"],
         "coordinates" : [20, 20],
         "scale" : [1.0, 1.0],
         "trigger" : "!bounce",
@@ -16,7 +16,7 @@
         "rare_chance" : 0
     },
     "twilight": {
-        "file" : "G:\\downloads\\Twilight.png",
+        "file" : ["G:\\downloads\\Twilight.png", "G:\\downloads\\jonny.m4a"],
         "coordinates" : [40, 40],
         "scale" : [1.0, 1.0],
         "trigger" : "!twilight",
@@ -27,7 +27,7 @@
         "fade" : true,
         "static" : true,
         "fade_time" : 3,
-        "volume" : -100,
+        "volume" : -12,
         "rare_file" : "",
         "rare_chance" : 0
     },
