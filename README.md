@@ -33,6 +33,8 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 *port* - Same as above, but the port  
 *password* - Password set for the OBS websocket server. Leave blank if authorization is not active in OBS  
 *animation_scene* - Name of the Scene animations are to be spawned in.  
+*friends_scene* - Name of the Scene friends are set up in (see 'friends' section in picarto)
+*ticker_scene* - Name of the Scene the Ticker is set up in
 *canvas_width* - Width of the OBS canvas. Most times this will be 1920  
 *canvas_height* - Height of the OBS canvas. Most times this will be 1080  
 *points_display_time* - if fade_text_field is "True", this will determined how long we will display the ticker  
@@ -47,6 +49,7 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 !grant 300 Maniko
 ```
 This uses the channel name, not the account name!
+*friends* - an array of usernames that are set up in OBS as friends. Upon joining, the scene item in the scene defined in friends_scene matching their name will be activated and disabled on leaving
 
 ### Points section:
 *base* - Base number of points earned by a user in your Picarto chat  
@@ -57,7 +60,7 @@ This uses the channel name, not the account name!
 Animation information is stored in the animations.json file. The fields have the following function:  
 
 *name* (in the example file, this is 'bounce') - name of an animation  
-*file* - path to the local file to be used by OBS as a media source. This can be a mp4, png, jpg, gif, animated png or gif, sound file and others.  
+*file* - path to the local file to be used by OBS as a media source. This can be a mp4, png, jpg, gif, animated png or gif, sound file and others. This can also be an array to spawn multiple items. Note that sound files by default will only be played once.  
 *coordinates* - two entry array of x and y coordinates the animation should be spawned at on the OBS canvas  
 *scale* - two entry array of x and y scale values for the spawned object  
 *trigger* - word a user will have to type into the chat to redeem the animation  
