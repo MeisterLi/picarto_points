@@ -5,8 +5,11 @@ This project aims to replicate a feature called "Channel points", as they are kn
 # How does it work?
 Users active in the chat will get awarded points in a specified frequency that can then be spent on 'rewards' such as animations, videos or sounds playing in the stream via OBS. The redemption works via chat commands and the current standings are pushed to a text field in OBS automatically.
 
-A demonstration can be found here:
+A demonstration can be found here:  
 https://youtu.be/zOGortptFzo
+
+A video detailing added functions since the video is here:  
+https://youtu.be/BkP37RF6LFc  
 
 # Installation
 After downloading all files, you will have to make sure you have Python 3 installed on your system, alongside pip. Both are open source and free to use and what I used to make this tool.
@@ -33,8 +36,8 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 *port* - Same as above, but the port  
 *password* - Password set for the OBS websocket server. Leave blank if authorization is not active in OBS  
 *animation_scene* - Name of the Scene animations are to be spawned in.  
-*friends_scene* - Name of the Scene friends are set up in (see 'friends' section in picarto)
-*ticker_scene* - Name of the Scene the Ticker is set up in
+*friends_scene* - Name of the Scene friends are set up in (see 'friends' section in picarto)  
+*ticker_scene* - Name of the Scene the Ticker is set up in  
 *canvas_width* - Width of the OBS canvas. Most times this will be 1920  
 *canvas_height* - Height of the OBS canvas. Most times this will be 1080  
 *points_display_time* - if fade_text_field is "True", this will determined how long we will display the ticker  
@@ -44,11 +47,11 @@ The configuraiton is stored in the config.ini. Below is a breakdown of all setti
 ### Picarto section:
 *channel_auth* - The Authorization for your Picarto Chat Bot  
 *channel_owner* - The Name of your channel / your username  
-*granter* - a user that is able to use !grant in the chat to grant points manually, such as:
+*granter* - a user that is able to use !grant in the chat to grant points manually, such as:  
 ```
 !grant 300 Maniko
 ```
-This uses the channel name, not the account name!
+This uses the channel name, not the account name!  
 *friends* - an array of usernames that are set up in OBS as friends. Upon joining, the scene item in the scene defined in friends_scene matching their name will be activated and disabled on leaving
 
 ### Points section:
@@ -72,7 +75,7 @@ Animation information is stored in the animations.json file. The fields have the
 *static* - should the animation stop being displayed after one play or loop? (useful for static images in combination with fade)  
 *fade_time* - Time before we fade the item  
 *volume* - Volume in dB to spawn the media item at (such as video or music)  
-*rare_file* - Alternative "rare" file to chose if rare_chance is hit
+*rare_file* - Alternative "rare" file to chose if rare_chance is hit  
 *rare_chance* - Chance for the "rare" file to be chosen
 
 ## Other files 
