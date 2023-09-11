@@ -101,7 +101,7 @@ There are some universal chat commands that can be performed:
 *!grant 'X' 'user'* - if the sender of this message is the granter as defined in the config, this will grant the X amount of points to the mentioned user. An example would be *!grant 30 Maniko*  
 
 # Website display
-You might want to set up a website with a list of current standings, which I have some examples for in web_app, using a very basic site template and a flask app written in python. Make sure to edit the 'web' section in the config if you'd like.
+You might want to set up a website with a list of current standings, which I have some examples for in web_app, using a very basic site template using socket-io to update the page and a flask app written in python. Make sure to edit the 'web' section in the config if you'd like.
 
 */clear* - requires pw  - The endpoint /clear is used to clear the current list
 */new_data* - requires pw and array of lists - The endpoint /new_data is used to update the list with all current standings
