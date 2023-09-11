@@ -59,6 +59,10 @@ This uses the channel name, not the account name!
 *boosted* - Number of points earned by a user in your Picarto chat if the user is present in the file *boosted_users.json*  
 *frequency* - The Frequency in seconds those points are given out at
 
+### Web section:
+*url* - Url to push updates to.
+*key* - key setup to authenticate legitimate pushes
+
 ## Animations
 Animation information is stored in the animations.json file. The fields have the following function:  
 
@@ -95,6 +99,14 @@ to start.
 There are some universal chat commands that can be performed:  
 *!points* - will send a whisper to the user with their current point standing  
 *!grant 'X' 'user'* - if the sender of this message is the granter as defined in the config, this will grant the X amount of points to the mentioned user. An example would be *!grant 30 Maniko*  
+
+# Website display
+You might want to set up a website with a list of current standings, which I have some examples for in web_app, using a very basic site template and a flask app written in python. Make sure to edit the 'web' section in the config if you'd like.
+
+*/clear* - requires pw  - The endpoint /clear is used to clear the current list
+*/new_data* - requires pw and array of lists - The endpoint /new_data is used to update the list with all current standings
+*/update* - requires no data - forces an update of the list via websocket to bring the page up to date
+
 
 # Limitations
 - The chat bot can only see channel join and leave events, so it should ideally be started before the stream is started. That said, there is a small check when a user writes something in the chat, to make sure they're still being tracked as 'active'  

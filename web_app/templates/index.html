@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tyrnn Channel Points</title>
+</head>
+<body>
+    <h1>Tyrnn Channel Points</h1>
+    <ul id="name-list">
+        {% for name, points in data.items() %}
+        <li>{{ name }}: {{ points }}</li>
+        {% endfor %}
+    </ul>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+    <script>
+        const socket = io.connect(document.domain);
+
+        // Function to update the list when a new message is received
+        socket.on('update', function(data) {
+            const nameList = document.getElementById('name-list');
+            nameList.innerHTML = '';  // Clear the existing list
+            console.log(data)
+
+            for (const [name, points] of Object.entries(data)) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${name}: ${points}`;
+                nameList.appendChild(listItem);
+            }
+        });
+    </script>
+</body>
+</html>

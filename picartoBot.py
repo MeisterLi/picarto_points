@@ -66,21 +66,27 @@ def save_standings():
 async def connect_to_chat(loop):
     global picarto_ws
     uri = chat_uri + f"username={channel_owner}&password={channel_auth}"
-
-    async with websockets.connect(uri, extra_headers=headers) as websocket_listener:
-        picarto_ws = websocket_listener
-        print(f"connecting to {uri}")
-        asyncio.ensure_future(update_standings())
-        if config.get("obs", "fade_text_field"):
-            asyncio.ensure_future(display_text_field_loop())
-        while True:
-            try:
-                message = await websocket_listener.recv()
-                print("Received from Chat:", message)
-                await check_for_message(message)
-            except websockets.exceptions.ConnectionClosed:
-                print("Connection closed.")
-                break
+    await clear_old_server_list()
+    asyncio.ensure_future(update_standings())
+    if config.get("obs", "fade_text_field"):
+        asyncio.ensure_future(display_text_field_loop())
+    while True:
+        try: 
+            async with websockets.connect(uri, extra_headers=headers) as websocket_listener:
+                picarto_ws = websocket_listener
+                print(f"connecting to {uri}")                                
+                while True:
+                    try:
+                        message = await websocket_listener.recv()
+                        print("Received from Chat:", message)
+                        await check_for_message(message)
+                    except websockets.exceptions.ConnectionClosed:
+                        print("Connection closed, attempting reconnect...")
+                        break
+        except Exception as e:
+            print(f"Error: {e}")
+        
+        await asyncio.sleep(5)
 
 
 async def send_message(websocket, message):
@@ -263,6 +269,8 @@ async def update_standings():
             print(f"{user} now has {user_list[user]} points!")
         save_standings()
         await update_obs_scroll_text()
+        if config.get('web', 'url') != "":
+            await update_standings_server()
 
 async def trigger_obs_animations(
     file,
@@ -611,6 +619,58 @@ def log_redemption(user, animation, price):
     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
     with open("redemption.log", "a") as fd:
         fd.write(f"[{dt_string}] - Redemption of {animation} for {price} by {user} \n")
+
+
+async def clear_old_server_list():
+    app_url = config.get("web", "url") + '/clear'
+    key = config.get("web", "key")
+    
+    payload = {
+        "password": key
+    }
+    
+    try:
+        # Send a POST request with JSON data
+        response = requests.post(app_url, json=payload)
+        print(str(response))
+
+        # Check the response status code and print the result
+        if response.status_code == 200:
+            print("Data sent successfully.")
+        else:
+            print(f"Failed to send data. Status code: {response.status_code}")
+            print(response.text)
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
+        
+async def update_standings_server():
+    app_url = config.get("web", "url") + "/new_data"
+    key = config.get("web", "key")
+    
+    update_list = []
+    
+    for item in user_list:
+        update_list.append(
+        {"name": str(item), "points": user_list[item]})
+        
+    payload = {
+        "password": key,
+        "data": update_list
+    }
+    
+    try:
+        # Send a POST request with JSON data
+        response = requests.post(app_url, json=payload)
+        print(str(response))
+
+        # Check the response status code and print the result
+        if response.status_code == 200:
+            print("Data sent successfully.")
+        else:
+            print(f"Failed to send data. Status code: {response.status_code}")
+            print(response.text)
+    except Exception as e:
+        print(f"An error occurred: {str(e)}")
 
 
 # Run the WebSocket connection
