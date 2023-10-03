@@ -14,7 +14,8 @@ def index():
 
 @app.route('/new_data', methods=['POST'])
 def new_data():
-    print("Updating!")
+    print("New Data received!")
+    print(request)
     password = request.json.get('password')
     if password != key:
         print("Password does not match!")

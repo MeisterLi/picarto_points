@@ -168,8 +168,6 @@ async def show_friend(user_name, remove):
     else:
         print(f"Disabling {user_name} in scene!")
     await ws.call(request)
-        
-        
 
 async def check_for_channel_owner(chat_message, message_author):
     if message_author == config.get("picarto", "granter") and '!grant' in chat_message:
@@ -184,7 +182,10 @@ async def check_for_channel_owner(chat_message, message_author):
             
 async def check_for_points(chat_message, message_author):
     if "!points" in chat_message:
-        await send_whisper(f"You currently have {user_list[message_author]} points!", message_author)
+        if message_author not in user_list:
+            await send_whisper(f"You currently have 0 points!", message_author)
+        else:
+            await send_whisper(f"You currently have {user_list[message_author]} points!", message_author)
 
 
 async def determine_animation_and_price(message, user):
